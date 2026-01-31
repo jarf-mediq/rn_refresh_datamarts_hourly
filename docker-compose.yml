@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  etl_incremental:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: etl_incremental_hourly
+    env_file:
+      - ./src/.env
+    restart: on-failure
+    networks:
+      - mediq_network
+    depends_on:
+      - postgres
+    # Ejecutar el ETL cada hora usando cron (opcional, o usar un scheduler externo)
+    # Para ejecución manual: docker-compose run etl_incremental
+    # Para ejecución programada: usar cron del host o un servicio de orquestación
+
+    # Servicio de ejemplo si se necesita una base de datos local para testing  
+    # (comentar si se usa DB externa)
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres_test
+    environment:
+      POSTGRES_USER: ${PG_USER:-postgres}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-postgres}
+      POSTGRES_DB: ${PG_DB_NAME:-DAU}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mediq_network
+
+networks:
+  mediq_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
